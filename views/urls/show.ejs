@@ -7,8 +7,28 @@
 </head>
 
 <body>
-  <% include partials/_header %>
+  <% include ../partials/_header %>
   <p><%= shortURL %>: <%= longURL %></p>
+
+    <form action="/urls/<%= shortURL %>/edit" method="POST" style="margin:40px;">
+      <label for="longURL">Enter the new long URL:</label>
+      <input id="longURL" type="text" name="longURL" placeholder="http://" style="width: 300px">
+      <input type="submit" value="Submit">
+    </form>
+
+
+
+    <form action="/urls" method="GET" style="margin:40px;">
+      <input type="submit" value="list Urls">
+    </form>
+
+    <form action="/" method="GET" style="margin:40px;">
+      <input type="submit" value="home page">
+    </form>
+
+    <form action="/urls/new" method="GET" style="margin:40px;">
+      <input type="submit" value="new URL">
+    </form>
 
 </body>
 
