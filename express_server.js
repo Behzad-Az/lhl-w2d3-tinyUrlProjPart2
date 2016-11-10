@@ -5,35 +5,11 @@ var app = express();
 const PORT = process.env.PORT || 8080; // default port 8080
 const bodyParser = require("body-parser");
 var urlExists = require('url-exists');
-
+const request = require('request');
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static('public'));
-//app.use(app.router);
-
-
-// app.use(function(req, res, next){
-//   res.status(404);
-
-//   // respond with html page
-//   if (req.accepts('html')) {
-//     res.render('404', { url: req.url });
-//     return;
-//   }
-
-//   // respond with json
-//   if (req.accepts('json')) {
-//     res.send({ error: 'Not found' });
-//     return;
-//   }
-
-//   // default to plain-text. send()
-//   res.type('txt').send('Not found');
-// });
-
-
-
 
 var urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -41,27 +17,24 @@ var urlDatabase = {
 }
 
 
-
 app.get("/", (req, res) => {
   console.log("--> inside get(/)");
   res.render("home/index");
 });
 
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
-
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
 
 app.get("/urls", (req, res) => {
   console.log("--> inside get(/urls)");
-  let templateVars = { urls: urlDatabase, statusMessage: "" }
+  let templateVars = { urls: urlDatabase}
   res.render("urls/index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
   console.log("--> inside get(/urls/new)");
   res.render("urls/new");
-
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -70,31 +43,16 @@ app.get("/urls/:id", (req, res) => {
     let templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id] };
     res.render("urls/show", templateVars);
   } else {
-    let templateVars = { urls: urlDatabase, msg: "No matching short URL found.", statusMessage: ""};
+    let templateVars = { urls: urlDatabase, msg: "No matching short URL found."};
     res.render("urls/index", templateVars);
   }
 });
 
-// app.get("/test", (req, res) => {
-//   res.render("urls");
-// });
-
 app.post("/urls", (req, res) => {
-  //res.send("Ok");         // Respond with 'Ok' (we will replace this)
   console.log("--> inside post(/urls)");
   let rndmStr = randomString(6);
   let tempUrl = req.body.longURL;
-  let statusMessage = "";
-  // if (!tempUrl.includes("http://",0) && !tempUrl.includes("https://")) {
-  //   tempUrl = `http://${tempUrl}`;
-  // }
-
-  // urlExists(tempUrl, (err, exists) => {
-  //   statusMessage = exists ? "Short url added, page exists." : "Short url added, page does not exist.";
-  //   urlDatabase[rndmStr] = tempUrl;
-  //   res.redirect(`/urls?${statusMessage}`);
-  // });
-  checkNewUrlAndAdd(tempUrl,rndmStr,"/urls",res);
+  checkNewUrlAndAdd(tempUrl, rndmStr, "/urls", res);
 });
 
 
@@ -106,10 +64,7 @@ app.post("/urls/*/delete", (req,res) => {
 
 app.post("/urls/*/edit", (req,res) => {
   console.log("--> inside post(/urls/*/edit");
-  // urlDatabase[req.params['0']] = req.body.longURL;
-  // res.redirect("/urls");
-
-  checkNewUrlAndAdd(req.body.longURL,req.params['0'],"/urls",res);
+  checkNewUrlAndAdd(req.body.longURL, req.params['0'], "/urls", res);
 });
 
 
@@ -123,9 +78,9 @@ app.get("/u/:shortURL", (req, res) => {
   else res.redirect('/urls/index');
 });
 
-// app.get("/hello", (req, res) => {
-//   res.end("<html><body>Hello <b>World</b> </body> </html> \n");
-// });
+app.get("/hello", (req, res) => {
+  res.end("<html><body>Hello <b>World</b> </body> </html> \n");
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
@@ -135,6 +90,7 @@ app.get("*", function(req, res){
   res.send('what???', 404);
 });
 
+
 function randomString(length) {
   const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   var result = '';
@@ -142,29 +98,26 @@ function randomString(length) {
   return result;
 }
 
-
 function checkNewUrlAndAdd (url, urlDataBaseKey, redirectUrl, res) {
-  if (!url.includes("http://",0) && !url.includes("https://")) {
+  if (!url.includes("http://", 0) && !url.includes("https://")) {
     url = `http://${url}`;
   }
-
-  urlExists(url, (err, exists) => {
-    // statusMessage = exists ? "Short url added, page exists." : "Short url added, page does not exist.";
-    if (exists) {
+  // urlExists(url, (err, exists) => {
+  //   if (exists) {
+  //     urlDatabase[urlDataBaseKey] = url;
+  //     res.redirect(redirectUrl);
+  //   } else {
+  //     res.redirect(redirectUrl);
+  //   }
+  // });
+  request(url, (error, response, body) => {
+    if (!error) {
       urlDatabase[urlDataBaseKey] = url;
-      //res.redirect(`/urls?${statusMessage}`);
       res.redirect(redirectUrl);
-    } else res.redirect(redirectUrl);
-
+    } else {
+      res.redirect(redirectUrl);
+    }
   });
+
 }
 
-
-// function generateRandomString() {
-//   //rndmStr = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
-//   var length = 6;
-//   //var rndmStr = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, length);
-//   var rndmStr = Math.round((Math.pow(36, length + 1) - Math.random() * Math.pow(36, length))).toString(36).slice(1);
-//   console.log(rndmStr);
-//   return rndmStr;
-// }
