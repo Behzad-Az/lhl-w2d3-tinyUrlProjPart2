@@ -2,13 +2,17 @@
 <html lang="en">
 <% include ../partials/_header %>
 
-<body> <!-- style="font-size:20px; padding:20px;"> -->
+<body>
   <div style="background-color:yellow;color:black;border:1px solid black;margin:5px">
-  <h3>New URL:</h3>
-    <form action="/urls" method="POST" style="margin:5px;">
-      <label for="longURL">Enter a URL:</label>
-      <input id="longURL" type="text" name="longURL" placeholder="http://" style="width: 300px">
-      <input type="submit" value="Submit">
+  <h3>Login Here: </h3>
+    <form action="/login" method="POST" style="margin:5px;">
+      <label for="email">Email address:</label>
+      <input id="email" type="email" name="email" style="width: 150px">
+      <br/>
+      <label for="password">password:</label>
+      <input id="password" type="password" name="password" style="width: 150px">
+      <br/>
+      <input type="submit" value="Submit" style="width:100px">
     </form>
   </div>
 

@@ -18,6 +18,8 @@ var urlDatabase = {
   "9sm5xK": "http://www.google.com"
 }
 
+var users = {};
+
 
 /*
 *
@@ -30,7 +32,7 @@ var urlDatabase = {
 app.get("/", (req, res) => {
   console.log("--> inside get(/)");
   let templateVars = {
-    username: req.cookies["username"],
+    user_id: req.cookies["user_id"],
     urls: urlDatabase
   };
   res.render("home/index", templateVars);
@@ -45,7 +47,7 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => {
   console.log("--> inside get(/urls)");
   let templateVars = {
-    username: req.cookies["username"],
+    user_id: req.cookies["user_id"],
     urls: urlDatabase
   };
   res.render("urls/index", templateVars);
@@ -54,7 +56,7 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   console.log("--> inside get(/urls/new)");
-  let templateVars = { username: req.cookies["username"] };
+  let templateVars = { user_id: req.cookies["user_id"] };
   res.render("urls/new",templateVars);
 });
 
@@ -62,14 +64,14 @@ app.get("/urls/:id", (req, res) => {
   console.log("--> inside get(/urls/:id)");
   if (urlDatabase[req.params.id] !== undefined) {
     let templateVars = {
-      username: req.cookies["username"],
+      user_id: req.cookies["user_id"],
       shortURL: req.params.id,
       longURL: urlDatabase[req.params.id]
     };
     res.render("urls/show", templateVars);
   } else {
     let templateVars = {
-      username: req.cookies["username"],
+      user_id: req.cookies["user_id"],
       urls: urlDatabase
     };
     res.render("urls/index", templateVars);
@@ -85,7 +87,7 @@ app.get("/u/:shortURL", (req, res) => {
   }
   else {
     let templateVars = {
-      username: req.cookies["username"],
+      user_id: req.cookies["user_id"],
       urls: urlDatabase
     };
     res.render("urls/index", templateVars);
@@ -93,7 +95,20 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  res.render
+  let templateVars = {
+    user_id: req.cookies["user_id"],
+    urls: urlDatabase
+  };
+  res.render("login/register", templateVars);
+});
+
+
+app.get("/login", (req, res) => {
+  let templateVars = {
+    user_id: req.cookies["user_id"],
+    urls: urlDatabase
+  };
+  res.render("login/login", templateVars);
 });
 
 
@@ -136,17 +151,46 @@ app.post("/urls/*/edit", (req,res) => {
   checkNewUrlAndAdd(req.body.longURL, req.params['0'], "/urls", res);
 });
 
+app.post("/loginPage", (req, res) => {
+  res.redirect("/login");
+});
 
 app.post("/login", (req, res) => {
   console.log("--> inside post(/login)");
-  console.log(req.body.username);
-  res.cookie("username",req.body.username,{maxAge: 300000});
-  console.log(req.cookies);
-  res.redirect("/");
+  console.log(req.body);
+  res.statusCode = checkLoginCredentials(req.body.email, req.body.password);
+  if (res.statusCode === 403) {
+    res.send("invalid login credentials");
+  } else {
+    res.cookie("user_id",req.body.email,{maxAge: 300000});
+    res.redirect("/");
+  }
 });
 
+app.post("/registerPage", (req, res) => {
+  res.redirect("/register");
+});
+
+app.post("/register", (req, res) => {
+  console.log("--> inside post(/register)");
+  let userID = randomString(10);
+  res.statusCode = checkRegistrationInfo(req.body.email, req.body.password);
+  if (res.statusCode['toString']()[0] === '4') {
+    res.send("user name / password not accepted!");
+    //res.redirect("/register")
+  } else {
+    users[userID] = {
+      id: userID,
+      email: req.body.email,
+      password: req.body.password
+    };
+    res.redirect("/");
+  }
+});
+
+
 app.post("/", (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/');
 });
 
@@ -189,6 +233,29 @@ function checkNewUrlAndAdd (url, urlDataBaseKey, redirectUrl, res) {
       res.redirect(redirectUrl);
     }
   });
-
 }
 
+function checkRegistrationInfo (email, password) {
+  let statusCode = 200;
+  if (email === '' || password === '') statusCode = 400;
+  else {
+    for (var item in users) {
+      if (users.hasOwnProperty(item)) {
+        if (users[item].email === email) statusCode = 400;
+      }
+    }
+  }
+  return statusCode;
+}
+
+function checkLoginCredentials(email, password) {
+  let statusCode = 403;
+  for (var item in users) {
+    if (users.hasOwnProperty(item)) {
+      if (users[item].email === email && users[item].password === password) {
+        statusCode = 200;
+      }
+    }
+  }
+  return statusCode;
+}
