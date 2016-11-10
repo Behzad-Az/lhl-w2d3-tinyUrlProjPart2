@@ -79,8 +79,18 @@ app.get("/u/:shortURL", (req, res) => {
     let longURL = urlDatabase[req.params.shortURL];
     res.redirect(longURL);
   }
-  else res.redirect('/urls/index');
+  else {
+    let templateVars = {
+      username: req.cookies["username"],
+      urls: urlDatabase
+    };
+    res.render("urls/index", templateVars);
+  }
 });
+
+// app.get("/register", (req, res) => {
+//   res.
+// });
 
 
 app.get("/hello", (req, res) => {
