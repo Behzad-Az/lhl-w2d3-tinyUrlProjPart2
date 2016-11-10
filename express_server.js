@@ -29,7 +29,11 @@ var urlDatabase = {
 
 app.get("/", (req, res) => {
   console.log("--> inside get(/)");
-  res.render("home/index");
+  let templateVars = {
+    username: req.cookies["username"],
+    urls: urlDatabase
+  };
+  res.render("home/index", templateVars);
 });
 
 
@@ -88,9 +92,9 @@ app.get("/u/:shortURL", (req, res) => {
   }
 });
 
-// app.get("/register", (req, res) => {
-//   res.
-// });
+app.get("/register", (req, res) => {
+  res.render
+});
 
 
 app.get("/hello", (req, res) => {

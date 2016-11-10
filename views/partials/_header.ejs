@@ -1,22 +1,18 @@
 <head>
-  <h1> Welcome to My TinyURL </h1>
+  <div style="background-color:orange;color:black;border:1px solid black;margin:5px">
+    <h1> Welcome to My TinyURL </h1>
 
-
-
-  <% if (username !== undefined && username !== '') { %>
-    <p> Welcome <%= username %> <p>
-    <form action ="/" method="POST" style="margin:10px">
-      <input type="submit" value="log out">
-    </form>
-
-  <% } else { %>
-
-    <form action="/login" method="POST" style="margin:10px;">
-      <label for="username">Username:</label>
-      <input id="username" type="text" name="username" placeholder="user name" style="width: 150px">
-      <input type="submit" value="sign in">
-    </form>
-
-  <% } %>
-
+    <% if (username !== undefined && username !== '') { %>
+      <p> Welcome <%= username %> <p>
+      <form action ="/" method="POST" style="margin:10px">
+        <input type="submit" value="log out">
+      </form>
+    <% } else { %>
+      <form action="/login" method="POST" style="margin:10px;">
+        <label for="username">Username:</label>
+        <input id="username" type="text" name="username" placeholder="user name" style="width: 150px">
+        <input type="submit" value="sign in">
+      </form>
+    <% } %>
+  </div>
 </head>

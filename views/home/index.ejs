@@ -4,19 +4,25 @@
 
 
 <head>
+   <div style="margin:5px">
+    <img src="/images/welcome.png" width:auto height=200>
+  </div>
+  <% include ../partials/_header %>
 </head>
 
 <body>
 
-  <img src="/images/welcome.png" WIDTH = 450 HEIGHT = 200>
+  <div style="background-color:green;color:black;border:1px solid black;margin:5px">
 
-  <form action="/urls/new" method="GET" style="margin:40px;">
-    <input type="submit" value="new URL">
-  </form>
+    <form action="/urls/new" method="GET" style="margin:10px;">
+      <input type="submit" value="new URL">
+    </form>
 
-  <form action="/urls" method="GET" style="margin:40px;">
-    <input type="submit" value="list of urls">
-  </form>
+    <form action="/urls" method="GET" style="margin:10px;">
+      <input type="submit" value="list of urls">
+    </form>
+
+  </div>
 
 </body>
 

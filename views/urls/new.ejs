@@ -1,23 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head></head>
-  <body style="font-size:20px; padding:20px;">
+<% include ../partials/_header %>
 
-    <% include ../partials/_header %>
-
-    <form action="/urls" method="POST" style="margin:40px;">
+<body> <!-- style="font-size:20px; padding:20px;"> -->
+  <div style="background-color:yellow;color:black;border:1px solid black;margin:5px">
+  <h3>New URL:</h3>
+    <form action="/urls" method="POST" style="margin:5px;">
       <label for="longURL">Enter a URL:</label>
       <input id="longURL" type="text" name="longURL" placeholder="http://" style="width: 300px">
       <input type="submit" value="Submit">
     </form>
+  </div>
 
-    <form action="/urls" method="GET" style="margin:40px;">
+
+  <div style="background-color:green;color:black;border:1px solid black;margin:5px">
+
+    <form action="/urls" method="GET" style="margin:10px;">
       <input type="submit" value="list Urls">
     </form>
 
-    <form action="/" method="GET" style="margin:40px;">
+    <form action="/" method="GET" style="margin:10px;">
       <input type="submit" value="home page">
     </form>
+  </div>
 
-  </body>
+</body>
 </html>
+
+
