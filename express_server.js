@@ -7,6 +7,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const request = require('request');
 const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 app.set('trust proxy', 1);
 app.use(cookieSession({
@@ -17,10 +18,12 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 app.use(express.static('public'));
 
+// ????????????????????????????????????????????????????????????????????????????????????????????????????
 // Server does not respond when I used this... Ask mentor why??
 // app.use(function (req, res, next) {
 //   req.sessionOptions.maxAge = req.session.maxAge || req.sessionOptions.maxAge
 // })
+// ????????????????????????????????????????????????????????????????????????????????????????????????????
 
 // cookie parser was replaced session cookies.
 // const cookieParser = require('cookie-parser')
@@ -61,33 +64,35 @@ function checkNewUrlAndAdd (url, user, urlDataBaseKey, redirectUrl, res) {
 }
 
 // fcn checks for valid and available email / password during registration.
-function checkRegistrationInfo (email, password) {
-  let statusCode = 200;
-  if (email === '' || password === '') {
-    statusCode = 400;
-  } else {
-    for (var item in users) {
-      if (users.hasOwnProperty(item)) {
-        if (users[item].email === email) { statusCode = 400; }
-      }
-    }
-  }
-  return statusCode;
-}
+// No longer used for the async bcrypt code
+// function checkRegistrationInfo (email, password) {
+//   let statusCode = 200;
+//   if (email === '' || password === '') {
+//     statusCode = 400;
+//   } else {
+//     for (var item in users) {
+//       if (users.hasOwnProperty(item)) {
+//         if (users[item].email === email) { statusCode = 400; }
+//       }
+//     }
+//   }
+//   return statusCode;
+// }
 
 // fcn checks for valid user credentials during login.
-function checkLoginCredentials(email, password) {
-  let statusCode = 403;
-  for (var item in users) {
-    if (users.hasOwnProperty(item)) {
-      if (users[item].email === email &&
-          bcrypt.compareSync(password, users[item].password)) {
-        statusCode = 200;
-      }
-    }
-  }
-  return statusCode;
-}
+// No longer used for the async bcrypt code
+// function checkLoginCredentials(email, password) {
+//   let statusCode = 403;
+//   for (var item in users) {
+//     if (users.hasOwnProperty(item)) {
+//       if (users[item].email === email &&
+//           bcrypt.compareSync(password, users[item].password)) {
+//         statusCode = 200;
+//       }
+//     }
+//   }
+//   return statusCode;
+// }
 
 // Returns a random string of length given in the argument from a selection of chars.
 function randomString(length) {
@@ -201,6 +206,7 @@ app.post("/urls/*/delete", (req, res) => {
 app.post("/urls/*/edit", (req, res) => {
   console.log("--> inside post(/urls/*/edit");
   checkNewUrlAndAdd(req.body.longURL, req.session.userID, req.params['0'], "/urls", res);
+  console.log(users);
 });
 
 // redirect to login page when button is clicked.
@@ -211,14 +217,18 @@ app.post("/loginPage", (req, res) => {
 // login the user
 app.post("/login", (req, res) => {
   console.log("--> inside post(/login)");
-  res.statusCode = checkLoginCredentials(req.body.email, req.body.password);
-  if (res.statusCode === 403) {
-    res.send("invalid login credentials");
-  } else {
-    req.session.userID = req.body.email;
-    //res.cookie("userID",req.body.email,{maxAge: 300000});
-    res.redirect("/");
-  }
+  let statusCode = 403;
+  if (users[req.body.email]) {
+    bcrypt.compare(req.body.password, users[req.body.email].password, function(err, response) {
+      if (!err && response) {
+        req.session.userID = req.body.email;
+        res.redirect("/");
+      } else {
+        res.send("invalid login credentials");
+      }
+
+    });
+  } else res.send("invalid login credentials");
 });
 
 // redirect to register page when button is clicked.
@@ -229,18 +239,28 @@ app.post("/registerPage", (req, res) => {
 // register new user.
 app.post("/register", (req, res) => {
   console.log("--> inside post(/register)");
-  let userID = randomString(10);
-  res.statusCode = checkRegistrationInfo(req.body.email, req.body.password);
+  // With session cookies, there is no need to encrypt the user ID.
+  let userID = req.body.email;
+
+  res.statusCode = (userID === '' || req.body.password === '' || users[userID]) ? 400 : res.statusCode;
+
   if (res.statusCode['toString']()[0] === '4') {
     res.send("user name / password not accepted!");
   } else {
-    const hashedPassword = bcrypt.hashSync(req.body.password, 10);
-    users[userID] = {
-      id: userID,
-      email: req.body.email,
-      password: hashedPassword
-    };
-    res.redirect("/");
+    // Replaced sync bcrypt with async
+    //const hashedPassword = bcrypt.hashSync(req.body.password, 10);
+    bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
+      if (err) {
+        res.send("user name / password not accepted!");
+      } else {
+          users[userID] = {
+          id: userID,
+          email: req.body.email,
+          password: hash
+        };
+        res.redirect("/");
+      }
+    });
   }
 });
 
