@@ -8,7 +8,6 @@ const PORT = process.env.PORT || 8080;
 const request = require('request');
 const bcrypt = require('bcrypt');
 
-
 app.set('trust proxy', 1);
 app.use(cookieSession({
   name: 'session',
@@ -17,7 +16,6 @@ app.use(cookieSession({
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 app.use(express.static('public'));
-
 
 // Server does not respond when I used this... Ask mentor why??
 // app.use(function (req, res, next) {
@@ -34,6 +32,7 @@ app.use(express.static('public'));
 let urlDatabase = {};
 let users = {};
 
+// -------------------- Global Functions ----------------------
 // fcn renders home page if user has not logged in.
 function checkIfLoggedIn (req, res) {
   if (req.session.userID === undefined) {
@@ -102,7 +101,6 @@ function randomString(length) {
 
 
 //------------------------ GETS ------------------------------
-
 // go to home page when root url is entered.
 app.get("/", (req, res) => {
   console.log("--> inside get(/)");
@@ -184,7 +182,6 @@ app.get("*", (req, res) => {
 
 
 // ------------------------ POSTS ------------------------------
-
 // post a new url for the user.
 app.post("/urls", (req, res) => {
   console.log("--> inside post(/urls)");
