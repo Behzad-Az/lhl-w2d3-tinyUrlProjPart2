@@ -235,8 +235,6 @@ app.post("/register", (req, res) => {
     res.send("user name / password not accepted!");
   } else {
     const hashedPassword = bcrypt.hashSync(req.body.password, 10);
-
-    console.log(hashedPassword);
     users[userID] = {
       id: userID,
       email: req.body.email,
@@ -248,6 +246,7 @@ app.post("/register", (req, res) => {
 
 // logout current user.
 app.post("/", (req, res) => {
+  console.log("--> inside post(/)");
   req.session.userID = undefined;
   //res.clearCookie('userID');
   res.redirect('/');
