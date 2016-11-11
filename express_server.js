@@ -20,6 +20,17 @@ var urlDatabase = {
 
 var users = {};
 
+function checkIfLoggedIn (req, res) {
+  if (req.cookies["user_id"] === undefined) {
+    res.render("home/index", { user_id: undefined });
+  }
+}
+
+function checkForUrlData (req, res) {
+  if (urlDatabase[req.cookies['user_id']] === undefined) {
+    res.render("home/index", { user_id: req.cookies['user_id'] });
+  }
+}
 
 /*
 *
@@ -29,8 +40,10 @@ var users = {};
 ------------------------ GETS ------------------------------
 */
 
+// This is good, don't touch it.
 app.get("/", (req, res) => {
   console.log("--> inside get(/)");
+  checkIfLoggedIn(req, res);
   let templateVars = {
     user_id: req.cookies["user_id"],
     urls: urlDatabase
@@ -39,56 +52,65 @@ app.get("/", (req, res) => {
 });
 
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
+// app.get("/urls.json", (req, res) => {
+//   res.json(urlDatabase);
+// });
 
-
+// This is good, don't touch it.
 app.get("/urls", (req, res) => {
   console.log("--> inside get(/urls)");
+  checkIfLoggedIn(req, res);
   let templateVars = {
     user_id: req.cookies["user_id"],
-    urls: urlDatabase
+    urls: urlDatabase[req.cookies["user_id"]]
   };
   res.render("urls/index", templateVars);
 });
 
-
+//This is good, don't touch it.
 app.get("/urls/new", (req, res) => {
   console.log("--> inside get(/urls/new)");
+  checkIfLoggedIn(req, res);
   let templateVars = { user_id: req.cookies["user_id"] };
   res.render("urls/new",templateVars);
 });
 
+//This is good, don't touch it.
 app.get("/urls/:id", (req, res) => {
   console.log("--> inside get(/urls/:id)");
-  if (urlDatabase[req.params.id] !== undefined) {
+  checkIfLoggedIn(req, res);
+  checkForUrlData(req, res);
+
+  if (urlDatabase[req.cookies['user_id']][req.params.id] !== undefined) {
     let templateVars = {
       user_id: req.cookies["user_id"],
       shortURL: req.params.id,
-      longURL: urlDatabase[req.params.id]
+      longURL: urlDatabase[req.cookies['user_id']][req.params.id]
     };
     res.render("urls/show", templateVars);
   } else {
     let templateVars = {
       user_id: req.cookies["user_id"],
-      urls: urlDatabase
+      urls: urlDatabase[req.cookies['user_id']]
     };
     res.render("urls/index", templateVars);
   }
 });
 
-
+// This is good. don't touch it.
 app.get("/u/:shortURL", (req, res) => {
   console.log("--> inside get(/u/:shortURL)");
-  if (urlDatabase[req.params.shortURL] !== undefined) {
-    let longURL = urlDatabase[req.params.shortURL];
+  checkIfLoggedIn(req, res);
+  checkForUrlData(req, res);
+
+  if (urlDatabase[req.cookies['user_id']][req.params.shortURL] !== undefined) {
+    let longURL = urlDatabase[req.cookies['user_id']][req.params.shortURL];
     res.redirect(longURL);
   }
   else {
     let templateVars = {
       user_id: req.cookies["user_id"],
-      urls: urlDatabase
+      urls: urlDatabase[req.cookies['user_id']]
     };
     res.render("urls/index", templateVars);
   }
@@ -97,7 +119,6 @@ app.get("/u/:shortURL", (req, res) => {
 app.get("/register", (req, res) => {
   let templateVars = {
     user_id: req.cookies["user_id"],
-    urls: urlDatabase
   };
   res.render("login/register", templateVars);
 });
@@ -106,19 +127,19 @@ app.get("/register", (req, res) => {
 app.get("/login", (req, res) => {
   let templateVars = {
     user_id: req.cookies["user_id"],
-    urls: urlDatabase
   };
   res.render("login/login", templateVars);
 });
 
 
-app.get("/hello", (req, res) => {
-  res.end("<html><body>Hello <b>World</b> </body> </html> \n");
-});
+// app.get("/hello", (req, res) => {
+//   res.end("<html><body>Hello <b>World</b> </body> </html> \n");
+// });
 
 
 app.get("*", function(req, res){
-  res.send('what???', 404);
+  //res.send('what???', 404);
+  res.render("home/index", { user_id: req.cookies['user_id'] });
 });
 
 
@@ -134,21 +155,21 @@ app.post("/urls", (req, res) => {
   console.log("--> inside post(/urls)");
   let rndmStr = randomString(6);
   let tempUrl = req.body.longURL;
-  checkNewUrlAndAdd(tempUrl, rndmStr, "/urls", res);
+  checkNewUrlAndAdd(tempUrl, req.cookies['user_id'], rndmStr, "/urls", res);
 });
 
 
 
 app.post("/urls/*/delete", (req,res) => {
   console.log("--> inside post(/urls/*/delete");
-  delete urlDatabase[req.params['0']];
+  delete urlDatabase[req.cookies['user_id']][req.params['0']];
   res.redirect("/urls");
 });
 
 
 app.post("/urls/*/edit", (req,res) => {
   console.log("--> inside post(/urls/*/edit");
-  checkNewUrlAndAdd(req.body.longURL, req.params['0'], "/urls", res);
+  checkNewUrlAndAdd(req.body.longURL, req.cookies['user_id'], req.params['0'], "/urls", res);
 });
 
 app.post("/loginPage", (req, res) => {
@@ -177,7 +198,6 @@ app.post("/register", (req, res) => {
   res.statusCode = checkRegistrationInfo(req.body.email, req.body.password);
   if (res.statusCode['toString']()[0] === '4') {
     res.send("user name / password not accepted!");
-    //res.redirect("/register")
   } else {
     users[userID] = {
       id: userID,
@@ -205,7 +225,7 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-
+// This is good. don't touch
 function randomString(length) {
   const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   var result = '';
@@ -213,27 +233,23 @@ function randomString(length) {
   return result;
 }
 
-function checkNewUrlAndAdd (url, urlDataBaseKey, redirectUrl, res) {
+
+// This is good. Don't touch.
+function checkNewUrlAndAdd (url, user, urlDataBaseKey, redirectUrl, res) {
   if (!url.includes("http://", 0) && !url.includes("https://")) {
     url = `http://${url}`;
   }
-  // urlExists(url, (err, exists) => {
-  //   if (exists) {
-  //     urlDatabase[urlDataBaseKey] = url;
-  //     res.redirect(redirectUrl);
-  //   } else {
-  //     res.redirect(redirectUrl);
-  //   }
-  // });
   request(url, (error, response, body) => {
+    if (urlDatabase[user] === undefined) urlDatabase[user] = {};
     if (!error) {
-      urlDatabase[urlDataBaseKey] = url;
+      urlDatabase[user][urlDataBaseKey] = url;
       res.redirect(redirectUrl);
     } else {
       res.redirect(redirectUrl);
     }
   });
 }
+
 
 function checkRegistrationInfo (email, password) {
   let statusCode = 200;
