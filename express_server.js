@@ -8,6 +8,10 @@ var urlExists = require('url-exists');
 const request = require('request');
 const cookieParser = require('cookie-parser')
 
+const bcrypt = require('bcrypt');
+// const password = "purple-monkey-dinosaur"; // you will probably this from req.params
+// const hashed_password = bcrypt.hashSync(password, 10);
+
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static('public'));
@@ -195,14 +199,19 @@ app.post("/registerPage", (req, res) => {
 app.post("/register", (req, res) => {
   console.log("--> inside post(/register)");
   let userID = randomString(10);
+
+
   res.statusCode = checkRegistrationInfo(req.body.email, req.body.password);
   if (res.statusCode['toString']()[0] === '4') {
     res.send("user name / password not accepted!");
   } else {
+    const hashed_password = bcrypt.hashSync(req.body.password, 10);
+
+    console.log(hashed_password);
     users[userID] = {
       id: userID,
       email: req.body.email,
-      password: req.body.password
+      password: hashed_password
     };
     res.redirect("/");
   }
@@ -268,7 +277,8 @@ function checkLoginCredentials(email, password) {
   let statusCode = 403;
   for (var item in users) {
     if (users.hasOwnProperty(item)) {
-      if (users[item].email === email && users[item].password === password) {
+      if (users[item].email === email &&
+          bcrypt.compareSync(password, users[item].password)) {
         statusCode = 200;
       }
     }
