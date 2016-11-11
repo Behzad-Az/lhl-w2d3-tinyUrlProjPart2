@@ -2,23 +2,25 @@
   <div style="background-color:orange;color:black;border:1px solid black;margin:5px">
     <h1> Welcome to My TinyURL </h1>
 
-    <% if (user_id !== undefined && user_id !== '') { %>
-      <p> Welcome <%= user_id %> <p>
+    <% if (userID !== undefined && userID !== '') { %>
+
+      <p> Welcome <%= userID %> <p>
+
       <form action ="/" method="POST" style="margin:10px">
         <input type="submit" value="log out">
       </form>
+
     <% } else { %>
+
       <form action="/loginPage" method="POST" style="margin:10px;">
-        <!--
-        <label for="user_id">User ID:</label>
-        <input id="user_id" type="text" name="user_id" placeholder="user name" style="width: 150px">
-        -->
         <input type="submit" value="Log In">
       </form>
 
       <form action="/registerPage" method="POST" style="margin:10px;">
         <input type="submit" value="Register">
       </form>
+
     <% } %>
+
   </div>
 </head>

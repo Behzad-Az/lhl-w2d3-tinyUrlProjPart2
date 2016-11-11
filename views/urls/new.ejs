@@ -2,16 +2,18 @@
 <html lang="en">
 <% include ../partials/_header %>
 
-<body> <!-- style="font-size:20px; padding:20px;"> -->
+<body>
   <div style="background-color:yellow;color:black;border:1px solid black;margin:5px">
+
   <h3>New URL:</h3>
+
     <form action="/urls" method="POST" style="margin:5px;">
       <label for="longURL">Enter a URL:</label>
       <input id="longURL" type="text" name="longURL" placeholder="http://" style="width: 300px">
       <input type="submit" value="Submit">
     </form>
-  </div>
 
+  </div>
 
   <% include ../partials/_footer %>
 

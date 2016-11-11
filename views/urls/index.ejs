@@ -9,9 +9,10 @@
 
 <body>
   <div style="background-color:yellow;color:black;border:1px solid black;margin:5px">
-    <p> <% for (item in urls) { %>
-      <li>
 
+    <p> <% for (item in urls) { %>
+
+      <li>
         <a href="<%= urls[item] %>" target="_blank"><%= item %></a> -->  <a href="<%= urls[item] %>" target="_blank"> <%= urls[item] %> </a>
 
         <form action="/urls/<%= item %>/delete" method="POST">
@@ -20,7 +21,9 @@
 
         <a href="/urls/<%=item%>" target="_blank"> Edit </a>
       </li>
+
       <% } %>
+
     </p>
   </div>
 
