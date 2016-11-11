@@ -100,19 +100,14 @@ function randomString(length) {
   return result;
 }
 
-/*
------------------------- GETS ------------------------------
-*/
+
+//------------------------ GETS ------------------------------
 
 // go to home page when root url is entered.
 app.get("/", (req, res) => {
   console.log("--> inside get(/)");
   checkIfLoggedIn(req, res);
-  let templateVars = {
-    userID: req.session.userID,
-    urls: urlDatabase
-  };
-  res.render("home/index", templateVars);
+  res.render("home/index", { userID: req.session.userID });
 });
 
 // if logged in, go to urls/index (list of urls) when /urls is entered
@@ -130,8 +125,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   console.log("--> inside get(/urls/new)");
   checkIfLoggedIn(req, res);
-  let templateVars = { userID: req.session.userID };
-  res.render("urls/new", templateVars);
+  res.render("urls/new", { userID: req.session.userID });
 });
 
 // if logged in, go to urls/:id (specific short url view / edit).
@@ -139,7 +133,6 @@ app.get("/urls/:id", (req, res) => {
   console.log("--> inside get(/urls/:id)");
   checkIfLoggedIn(req, res);
   checkForUrlData(req, res);
-
   if (urlDatabase[req.session.userID][req.params.id] !== undefined) {
     let templateVars = {
       userID: req.session.userID,
@@ -176,30 +169,21 @@ app.get("/u/:shortURL", (req, res) => {
 
 // go to register page.
 app.get("/register", (req, res) => {
-  let templateVars = {
-    userID: req.session.userID
-  };
-  res.render("login/register", templateVars);
+  res.render("login/register", { userID: req.session.userID });
 });
 
 // go to login page.
 app.get("/login", (req, res) => {
-  let templateVars = {
-    userID: req.session.userID
-  };
-  res.render("login/login", templateVars);
+  res.render("login/login", { userID: req.session.userID });
 });
 
 // go to home page for all other misc urls
-app.get("*", function(req, res){
-  //res.send('what???', 404);
+app.get("*", (req, res) => {
   res.render("home/index", { userID: req.session.userID });
 });
 
 
-/*
------------------------- POSTS ------------------------------
-*/
+// ------------------------ POSTS ------------------------------
 
 // post a new url for the user.
 app.post("/urls", (req, res) => {
