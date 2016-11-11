@@ -10,11 +10,8 @@
 <body>
   <div style="background-color:yellow;color:black;border:1px solid black;margin:5px">
 
-    <p> <% for (item in urls) { %>
-
+    <% for (item in urls) { %>
       <li>
-        <a href="<%= urls[item] %>" target="_blank"><%= item %></a> -->  <a href="<%= urls[item] %>" target="_blank"> <%= urls[item] %> </a>
-
         <!--
         <form action="/urls/<%= item %>/delete" method="POST">
           <input type="submit" value="Delete URL">
@@ -23,23 +20,21 @@
         <a href="/urls/<%=item%>" target="_blank"> Edit </a>
         -->
 
-        <form name="deleteForm" action="/urls/<%= item %>/delete" method="POST">
+        <form name="deleteForm<%=item%>" action="/urls/<%= item %>/delete" method="POST">
 
-          <input type="hidden" name="param1" value="param1Value">
-          <a href="javascript:document.deleteForm.submit()"> <img src="/images/trashBin.png" width:auto height=30></a>
+          <a href="<%= urls[item] %>" target="_blank"><%= item %></a>  <==>  <a href="<%= urls[item] %>" target="_blank"> <%= urls[item] %> </a>
+
+          <a href="javascript:document.deleteForm<%=item%>.submit()">
+          <img src="/images/trashBin.png" width:auto height=30></a>
 
           <a href="/urls/<%=item%>"><img src="/images/editIcon.png" width:auto height=30></a>
         </form>
 
       </li>
-
       <% } %>
-
-    </p>
   </div>
 
   <% include ../partials/_footer %>
-
 </body>
 
 </html>

@@ -1,5 +1,10 @@
 <head>
+  <style>
+    h1 { color: red; }
+  </style>
+
   <div style="background-color:orange;color:black;border:1px solid black;margin:5px">
+
     <h1> Welcome to My TinyURL </h1>
 
     <% if (userID !== undefined && userID !== '') { %>
@@ -7,17 +12,17 @@
       <h3>Hello <%= userID %>!</h3>
 
       <form action ="/" method="POST" style="margin:10px">
-        <input type="submit" value="log out">
+        <input name="logout" type="submit" value="log out">
       </form>
 
     <% } else { %>
 
       <form action="/loginPage" method="POST" style="margin:10px;">
-        <input type="submit" value="Log In">
+        <input name="login" type="submit" value="Log In">
       </form>
 
       <form action="/registerPage" method="POST" style="margin:10px;">
-        <input type="submit" value="Register">
+        <input name="register" type="submit" value="Register">
       </form>
 
     <% } %>

@@ -192,7 +192,7 @@ app.post("/urls", (req, res) => {
 
 // delete a specific url by the user.
 app.post("/urls/*/delete", (req, res) => {
-  console.log("--> inside post(/urls/*/delete");
+  console.log("--> inside post(/urls/*/delete)");
   delete urlDatabase[req.session.userID][req.params['0']];
   res.redirect("/urls");
 });
