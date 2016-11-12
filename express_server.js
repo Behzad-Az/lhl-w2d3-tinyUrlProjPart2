@@ -18,16 +18,6 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 app.use(express.static('public'));
 
-// ????????????????????????????????????????????????????????????????????????????????????????????????????
-// Server does not respond when I used this... Ask mentor why??
-// app.use(function (req, res, next) {
-//   req.sessionOptions.maxAge = req.session.maxAge || req.sessionOptions.maxAge
-// })
-// ????????????????????????????????????????????????????????????????????????????????????????????????????
-
-// cookie parser was replaced session cookies.
-// const cookieParser = require('cookie-parser')
-// app.use(cookieParser());
 
 // declare global variables used in this code.
 // urlDatabase object contains short and long url data for a given user.
@@ -36,7 +26,7 @@ let urlDatabase = {};
 let users = {};
 
 // -------------------- Global Functions ----------------------
-// fcn renders home page if user has not logged in.
+// fcn renders login page if user has not logged in.
 function checkIfLoggedIn (req, res, path) {
   if (req.session.userID === undefined) {
     res.statusCode = (path === "/") ? 302 : 401;
@@ -44,7 +34,7 @@ function checkIfLoggedIn (req, res, path) {
   }
 }
 
-// fcn renders home page if user has no urls saved yet.
+// fcn urls index if url list does not exist yet
 function checkForUrlData (req, res) {
   if (urlDatabase[req.session.userID] === undefined) {
     let templateVars = {
@@ -65,43 +55,16 @@ function checkNewUrlAndAdd (url, user, urlDataBaseKey, redirectUrl, res) {
   request(tempUrl, (error, response, body) => {
     if (urlDatabase[user] === undefined) { urlDatabase[user] = {}; }
     if (!error) {
-      urlDatabase[user][urlDataBaseKey] = tempUrl;
+      urlDatabase[user][urlDataBaseKey] = {
+        longUrl: tempUrl,
+        creationTime: new Date(),
+        visits: 0
+      };
       res.statusCode = 302;
     }
     res.redirect(redirectUrl);
   });
 }
-
-// fcn checks for valid and available email / password during registration.
-// No longer used for the async bcrypt code
-// function checkRegistrationInfo (email, password) {
-//   let statusCode = 200;
-//   if (email === '' || password === '') {
-//     statusCode = 400;
-//   } else {
-//     for (var item in users) {
-//       if (users.hasOwnProperty(item)) {
-//         if (users[item].email === email) { statusCode = 400; }
-//       }
-//     }
-//   }
-//   return statusCode;
-// }
-
-// fcn checks for valid user credentials during login.
-// No longer used for the async bcrypt code
-// function checkLoginCredentials(email, password) {
-//   let statusCode = 403;
-//   for (var item in users) {
-//     if (users.hasOwnProperty(item)) {
-//       if (users[item].email === email &&
-//           bcrypt.compareSync(password, users[item].password)) {
-//         statusCode = 200;
-//       }
-//     }
-//   }
-//   return statusCode;
-// }
 
 // Returns a random string of length given in the argument from a selection of chars.
 function randomString(length) {
@@ -115,7 +78,7 @@ function randomString(length) {
 
 
 //------------------------ GETS ------------------------------
-// go to home page when root url is entered.
+// go to urls/index when root url is entererd and logged in.
 app.get("/", (req, res) => {
   console.log("--> inside get(/)");
   checkIfLoggedIn(req, res, "/");
@@ -127,7 +90,7 @@ app.get("/", (req, res) => {
   res.render("urls/index", templateVars);
 });
 
-// if logged in, go to urls/index (list of urls) when /urls is entered
+// go to urls/index when /urls is entererd and logged in.
 app.get("/urls", (req, res) => {
   console.log("--> inside get(/urls)");
   checkIfLoggedIn(req, res, "/urls");
@@ -139,15 +102,15 @@ app.get("/urls", (req, res) => {
   res.render("urls/index", templateVars);
 });
 
-// if logged in, go to urls/new (new url) when /urls/new is entered.
+// go to urls/new when urls/new is entererd and logged in and url list exists.
 app.get("/urls/new", (req, res) => {
   console.log("--> inside get(/urls/new)");
   checkIfLoggedIn(req, res, "/urls/new");
   res.statusCode = 200;
-  res.render("urls/new", { userID: req.session.userID });
+  res.render("urls/new", { userID: req.session.userID } );
 });
 
-// if logged in, go to urls/:id (specific short url view / edit).
+// go to urls/show when valid short url is entered and logged in and url list exists.
 app.get("/urls/:id", (req, res) => {
   console.log("--> inside get(/urls/:id)");
   checkIfLoggedIn(req, res);
@@ -156,7 +119,7 @@ app.get("/urls/:id", (req, res) => {
     let templateVars = {
       userID: req.session.userID,
       shortURL: req.params.id,
-      longURL: urlDatabase[req.session.userID][req.params.id]
+      longURL: urlDatabase[req.session.userID][req.params.id].longUrl
     };
     res.statusCode = 200;
     res.render("urls/show", templateVars);
@@ -170,15 +133,16 @@ app.get("/urls/:id", (req, res) => {
   }
 });
 
-// if logged in, go to specific webpage corresponding to short url.
+// go to link when valid short url is entered and logged in and url list exists.
 app.get("/u/:shortURL", (req, res) => {
   console.log("--> inside get(/u/:shortURL)");
   checkIfLoggedIn(req, res);
   checkForUrlData(req, res);
 
   if (urlDatabase[req.session.userID][req.params.shortURL] !== undefined) {
-    let longURL = urlDatabase[req.session.userID][req.params.shortURL];
+    let longURL = urlDatabase[req.session.userID][req.params.shortURL].longUrl;
     res.statusCode = 302;
+    urlDatabase[req.session.userID][req.params.shortURL].visits += 1;
     res.redirect(longURL);
   } else {
     let templateVars = {
@@ -222,6 +186,7 @@ app.get("/login", (req, res) => {
   }
 });
 
+// go to the home page.
 app.get("/home", (req, res) => {
   res.statusCode = 200;
   res.render("home/index", { userID: req.session.userID });
@@ -254,13 +219,7 @@ app.post("/urls/*/delete", (req, res) => {
 app.post("/urls/*/edit", (req, res) => {
   console.log("--> inside post(/urls/*/edit");
   checkNewUrlAndAdd(req.body.longURL, req.session.userID, req.params['0'], "/urls", res);
-  console.log(users);
 });
-
-// redirect to login page when button is clicked.
-// app.post("/loginPage", (req, res) => {
-//   res.redirect("/login");
-// });
 
 // login the user
 app.post("/login", (req, res) => {
@@ -283,11 +242,6 @@ app.post("/login", (req, res) => {
   }
 });
 
-// redirect to register page when button is clicked.
-// app.post("/registerPage", (req, res) => {
-//   res.redirect("/register");
-// });
-
 // register new user.
 app.post("/register", (req, res) => {
   console.log("--> inside post(/register)");
@@ -299,8 +253,6 @@ app.post("/register", (req, res) => {
   if (res.statusCode['toString']()[0] === '4') {
     res.send("user name / password not accepted!");
   } else {
-    // Replaced sync bcrypt with async
-    //const hashedPassword = bcrypt.hashSync(req.body.password, 10);
     bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
       if (err) {
         res.send("user name / password not accepted!");
@@ -320,7 +272,6 @@ app.post("/register", (req, res) => {
 app.post("/", (req, res) => {
   console.log("--> inside post(/)");
   req.session.userID = undefined;
-  //res.clearCookie('userID');
   res.redirect('/');
 });
 

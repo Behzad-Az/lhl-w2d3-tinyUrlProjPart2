@@ -12,22 +12,16 @@
 
     <% for (item in urls) { %>
       <li>
-        <!--
-        <form action="/urls/<%= item %>/delete" method="POST">
-          <input type="submit" value="Delete URL">
-        </form>
-
-        <a href="/urls/<%=item%>" target="_blank"> Edit </a>
-        -->
 
         <form name="deleteForm<%=item%>" action="/urls/<%= item %>/delete" method="POST">
 
-          <a href="<%= urls[item] %>" target="_blank"><%= item %></a>  <==>  <a href="<%= urls[item] %>" target="_blank"> <%= urls[item] %> </a>
+          <a href="<%= urls[item].longUrl %>" target="_blank"><%= item %></a>  <==>  <a href="<%= urls[item].longUrl %>" target="_blank"> <%= urls[item].longUrl %> </a>
 
           <a href="javascript:document.deleteForm<%=item%>.submit()">
           <img src="/images/trashBin.png" width:auto height=30></a>
 
           <a href="/urls/<%=item%>"><img src="/images/editIcon.png" width:auto height=30></a>
+          <p>Created on: <%=urls[item].creationTime%></p>
         </form>
 
       </li>
