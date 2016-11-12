@@ -37,16 +37,22 @@ let users = {};
 
 // -------------------- Global Functions ----------------------
 // fcn renders home page if user has not logged in.
-function checkIfLoggedIn (req, res) {
+function checkIfLoggedIn (req, res, path) {
   if (req.session.userID === undefined) {
-    res.render("home/index", { userID: undefined });
+    res.statusCode = (path === "/") ? 302 : 401;
+    res.render("login/login", { userID: undefined });
   }
 }
 
 // fcn renders home page if user has no urls saved yet.
 function checkForUrlData (req, res) {
   if (urlDatabase[req.session.userID] === undefined) {
-    res.render("home/index", { userID: req.session.userID });
+    let templateVars = {
+      userID: req.session.userID,
+      urls: urlDatabase[req.session.userID]
+    };
+    res.statusCode = 404;
+    res.render("urls/index", templateVars);
   }
 }
 
@@ -58,7 +64,10 @@ function checkNewUrlAndAdd (url, user, urlDataBaseKey, redirectUrl, res) {
   }
   request(tempUrl, (error, response, body) => {
     if (urlDatabase[user] === undefined) { urlDatabase[user] = {}; }
-    if (!error) { urlDatabase[user][urlDataBaseKey] = tempUrl; }
+    if (!error) {
+      urlDatabase[user][urlDataBaseKey] = tempUrl;
+      res.statusCode = 302;
+    }
     res.redirect(redirectUrl);
   });
 }
@@ -109,25 +118,32 @@ function randomString(length) {
 // go to home page when root url is entered.
 app.get("/", (req, res) => {
   console.log("--> inside get(/)");
-  checkIfLoggedIn(req, res);
-  res.render("home/index", { userID: req.session.userID });
+  checkIfLoggedIn(req, res, "/");
+  let templateVars = {
+    userID: req.session.userID,
+    urls: urlDatabase[req.session.userID]
+  };
+  res.statusCode = 302;
+  res.render("urls/index", templateVars);
 });
 
 // if logged in, go to urls/index (list of urls) when /urls is entered
 app.get("/urls", (req, res) => {
   console.log("--> inside get(/urls)");
-  checkIfLoggedIn(req, res);
+  checkIfLoggedIn(req, res, "/urls");
   let templateVars = {
     userID: req.session.userID,
     urls: urlDatabase[req.session.userID]
   };
+  res.statusCode = 200;
   res.render("urls/index", templateVars);
 });
 
 // if logged in, go to urls/new (new url) when /urls/new is entered.
 app.get("/urls/new", (req, res) => {
   console.log("--> inside get(/urls/new)");
-  checkIfLoggedIn(req, res);
+  checkIfLoggedIn(req, res, "/urls/new");
+  res.statusCode = 200;
   res.render("urls/new", { userID: req.session.userID });
 });
 
@@ -142,12 +158,14 @@ app.get("/urls/:id", (req, res) => {
       shortURL: req.params.id,
       longURL: urlDatabase[req.session.userID][req.params.id]
     };
+    res.statusCode = 200;
     res.render("urls/show", templateVars);
   } else {
     let templateVars = {
       userID: req.session.userID,
       urls: urlDatabase[req.session.userID]
     };
+    res.statusCode = 404;
     res.render("urls/index", templateVars);
   }
 });
@@ -160,28 +178,58 @@ app.get("/u/:shortURL", (req, res) => {
 
   if (urlDatabase[req.session.userID][req.params.shortURL] !== undefined) {
     let longURL = urlDatabase[req.session.userID][req.params.shortURL];
+    res.statusCode = 302;
     res.redirect(longURL);
   } else {
     let templateVars = {
       userID: req.session.userID,
       urls: urlDatabase[req.session.userID]
     };
+    res.statusCode = 404;
     res.render("urls/index", templateVars);
   }
 });
 
 // go to register page.
 app.get("/register", (req, res) => {
-  res.render("login/register", { userID: req.session.userID });
+
+  if (req.session.userID !== undefined) {
+    let templateVars = {
+      userID: req.session.userID,
+      urls: urlDatabase[req.session.userID]
+    };
+    res.statusCode = 302;
+    res.render("urls", templateVars);
+  } else {
+    res.statusCode = 200;
+    res.render("login/register", { userID: req.session.userID });
+  }
+
 });
 
 // go to login page.
 app.get("/login", (req, res) => {
-  res.render("login/login", { userID: req.session.userID });
+  if (req.session.userID !== undefined) {
+    let templateVars = {
+      userID: req.session.userID,
+      urls: urlDatabase[req.session.userID]
+    };
+    res.statusCode = 302;
+    res.render("urls", templateVars);
+  } else {
+    res.statusCode = 200;
+    res.render("login/login", { userID: req.session.userID });
+  }
+});
+
+app.get("/home", (req, res) => {
+  res.statusCode = 200;
+  res.render("home/index", { userID: req.session.userID });
 });
 
 // go to home page for all other misc urls
 app.get("*", (req, res) => {
+  res.statusCode = 404;
   res.render("home/index", { userID: req.session.userID });
 });
 
@@ -210,31 +258,35 @@ app.post("/urls/*/edit", (req, res) => {
 });
 
 // redirect to login page when button is clicked.
-app.post("/loginPage", (req, res) => {
-  res.redirect("/login");
-});
+// app.post("/loginPage", (req, res) => {
+//   res.redirect("/login");
+// });
 
 // login the user
 app.post("/login", (req, res) => {
   console.log("--> inside post(/login)");
-  let statusCode = 403;
+  let statusCode = 401;
   if (users[req.body.email]) {
     bcrypt.compare(req.body.password, users[req.body.email].password, function(err, response) {
       if (!err && response) {
         req.session.userID = req.body.email;
         res.redirect("/");
       } else {
+        res.statusCode = 401;
         res.send("invalid login credentials");
       }
 
     });
-  } else res.send("invalid login credentials");
+  } else {
+    res.statusCode = 401;
+    res.send("invalid login credentials");
+  }
 });
 
 // redirect to register page when button is clicked.
-app.post("/registerPage", (req, res) => {
-  res.redirect("/register");
-});
+// app.post("/registerPage", (req, res) => {
+//   res.redirect("/register");
+// });
 
 // register new user.
 app.post("/register", (req, res) => {
